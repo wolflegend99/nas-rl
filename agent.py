@@ -22,7 +22,7 @@ class DDPGAgent():
 
         self.actionNoise = OrnsteinUhlenbeckActionNoise(mu = np.zeros(n_actions))
         
-        self.update_parameter_weights(tau = 1)
+        self.update_parameter_weights(tau = 0.99)
         
     def choose_action(self, observation, agent_no):
         self.localActor.eval()

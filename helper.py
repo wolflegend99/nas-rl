@@ -3,6 +3,10 @@ import torch
 import numpy as np
 from math import sqrt
 
+params = {'batch_size': C.TRAIN_BATCH_SIZE,
+          'shuffle': True,
+          'num_workers': C.SMS}
+
 def load(X_train, X_test, y_train, y_test):
     # Numpy to Tensor Conversion (Train Set)
     X_train = torch.from_numpy(X_train)
@@ -15,30 +19,33 @@ def load(X_train, X_test, y_train, y_test):
     train = torch.utils.data.TensorDataset(X_train, y_train)
     test = torch.utils.data.TensorDataset(X_test, y_test)
     # Create train and test data loaders
-    train_loader = torch.utils.data.DataLoader(train, batch_size = C.TRAIN_BATCH_SIZE, shuffle = True)
-    test_loader = torch.utils.data.DataLoader(test, batch_size = C.TRAIN_BATCH_SIZE, shuffle = True)
+    train_loader = torch.utils.data.DataLoader(train, **params)
+    test_loader = torch.utils.data.DataLoader(test, **params)
     return train_loader, test_loader
 
 #0 is reward for layers
 #1 is reward for nodes
 def reward(train_acc, train_loss,
             test_acc, test_loss,
-            x, which, in_dims, out_dims, action, main_param):
-    #return np.random.randint(-10, 10)
+            next_state, agent_no, 
+            in_dims,
+            out_dims, action,
+            current_neurons):
+    return np.random.randint(-10, 10)
     #trainable = (in_dims + out_dims)*x[1] + x[1]*x[1]*x[0] + out_dims + x[1]*x[0]
-    value = 0
-    if which == 0:
-        value -= (x[0]/10)*2.5
-        if action <=0 and main_param == 1:
-            value -= 500
-    else:
-        value -= ((x[1]**2)/100)*6.25
-        if action <=0 and main_param == 1:
-            value -= 500
+    #value = 0
+    #if which == 0:
+    #    value -= (x[0]/10)*2.5
+    #    if action <=0 and main_param == 1:
+    #        value -= 500
+    #else:
+    #    value -= ((x[1]**2)/100)*6.25
+    #    if action <=0 and main_param == 1:
+    #        value -= 500
             
-    value -= train_loss*7
-    value += (test_acc/100)*10
-    return value
+    #value -= train_loss*7
+    #value += (test_acc/100)*10
+    #return value
 
 def sample(data, limit=C.SAMPLE_SIZE):
     sample = data.sample(n=limit)

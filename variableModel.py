@@ -3,34 +3,138 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import constants as C
+
+use_cuda = T.cuda.is_available()
+device = T.device("cuda:0" if use_cuda else "cpu")
 
 class Model(nn.Module):
-  def __init__(self, input_dims, output_dims, hidden_dim_array = [], non_linear_func_array = []):
-    super(Model, self).__init__()
-    self.input_dims = input_dims
-    self.non_linear_func_array = non_linear_func_array
-    self.hidden_dim_array = hidden_dim_array
-    self.output_dims = output_dims
-    self.linear_functions = []
-    self.non_linear_functions = [i() for i in self.non_linear_func_array]
-    self.hidden_layers = len(self.hidden_dim_array)
-    temp=self.input_dims
-    for i in range(self.hidden_layers):
-      self.linear_functions.append(nn.Linear(temp, self.hidden_dim_array[i]))
-      temp = self.hidden_dim_array[i]
-    self.linear_functions=nn.ModuleList(self.linear_functions)
-    self.output_layer = nn.Linear(temp, self.output_dims)
+    def __init__(self, lr, input_dims, output_dims, hidden_layer_array, non_linear_functions, trainloader, testloader): 
+        super(Model, self).__init__()
+        self.lr = lr
+        self.input_dims = input_dims
+        self.output_dims = output_dims
+        self.output = None
+        self.fcs = nn.ModuleList()
+        self.hidden_layer_array = hidden_layer_array
+        self.non_linear_functions = non_linear_functions
+        #self.non_linear_func_array = non_linear_func_array
+        self.num_layers = len(hidden_layer_array)
+        
+        self.initialise(hidden_layer_array)
+        #print("here")
+        self.criterion = nn.CrossEntropyLoss()
+        self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        self.trainloader = trainloader
+        self.testloader = testloader
 
-  def forward(self, x):
-    out = x
-    for i in range(self.hidden_layers):
-      out = self.linear_functions[i](out)
-      out = self.non_linear_functions[i](out)
-    out = self.output_layer(out)
-    return out
+    def initialise(self, hidden_layer_array):
 
-  def train(self, X_train, X_test):
-    pass
-  
-  def test(self):
-    pass
+        # (hidden_layer_array) and (non_linear_func_array) are lists
+        #self.non_linear_func_array = non_linear_func_array
+        #self.hidden_layer_array = hidden_layer_array
+        #for i in range(self.num_layers):
+        #    self.non_linear_functions.append(self.non_linear_func_array[i]())
+        #self.non_linear_functions = [i() for i in self.non_linear_func_array]
+        self.hidden_layer_array = hidden_layer_array
+        self.num_layers = len(hidden_layer_array)
+        #print(len(hidden_layer_array))
+
+        self.fcs = nn.ModuleList([nn.Linear(*self.input_dims, hidden_layer_array[0])])
+        #self.fcs.extend([nn.Linear(*self.input_dims, hidden_layer_array[0])])
+
+        if(self.num_layers > 1):
+            hidden_layers = zip(hidden_layer_array[:-1], hidden_layer_array[1:])
+            self.fcs.extend([nn.Linear(h1, h2) for h1, h2 in hidden_layers])
+
+        self.output = nn.Linear(hidden_layer_array[-1], self.output_dims)
+
+    def add_neurons(self, num,agent_no):
+
+        # Getting the older weights of all layers
+        self.hidden_layer_array[agent_no] += num
+        self.initialise(self.hidden_layer_array)
+        return self.hidden_layer_array
+
+    def remove_neurons(self, num,agent_no):
+        
+        # Getting the older weights of all layers
+        self.hidden_layer_array[agent_no] = max(self.hidden_layer_array[agent_no] - num,1)
+        #self.num_nodes = fin_neurons
+        self.initialise(self.hidden_layer_array)
+        return self.hidden_layer_array
+
+    def forward(self, x):
+        
+        for i in range(self.num_layers):
+            x = self.fcs[i](x)
+            x = getattr(F, self.non_linear_functions[i])(x)
+        x = self.output(x)  
+        return x
+
+    def print_param(self):
+        x = next(self.parameters()).data
+        print(x)
+    
+    def train(self):
+
+        loss_list, acc_list = [], []
+        for epochs in range(C.EPOCHS):
+            correct = 0
+            total = 0
+            train_loss = 0
+            #loader = iter(self.trainloader)
+            for data, target in self.trainloader:   # print("Target = ",target[0].item())
+                # send to gpu device
+                data, target = data.to(device), target.to(device)
+
+                # clear the gradients of all optimized variables
+                self.optimizer.zero_grad()
+                # forward pass: compute predicted outputs by passing inputs to the model
+                output = self.forward(data.float()).to(device)
+                #target = target.type(T.FloatTensor)
+                loss = self.criterion(output, target.long().squeeze())
+                train_loss += loss.item()*data.size(0)
+                # backward pass: compute gradient of the loss with respect to model parameters
+                loss.backward()
+                # perform a single optimization step (parameter update)
+                self.optimizer.step()
+                # update running training loss
+                
+                total += target.size(0)
+
+                # accuracy
+                _, predicted = T.max(output.data, 1)
+                correct += (predicted == target.squeeze()).sum().item()
+            acc_list.append(100*correct/total)
+            loss_list.append(train_loss/total)
+            #print("Epoch {} / {}: Accuracy is {}, loss is {}".format(epochs,C.EPOCHS,100*correct/total,train_loss/total))
+        return acc_list[-1], loss_list[-1]
+        #return mean(acc_list[-4:]), mean(loss_list[-4:])
+    
+    
+    def test(self):
+        correct = 0
+        total = 0
+        val_loss = 0
+        with T.no_grad():
+            for data, target in self.testloader:
+                # send to gpu device
+                data, target = data.to(device), target.to(device)
+                # Predict Output
+                output = self.forward(data.float())
+                # Calculate Loss
+                #target = target.view(-1)
+                loss = self.criterion(output, target.squeeze())
+                val_loss += loss.item()*data.size(0)
+                # Get predictions from the maximum value
+                _, predicted = T.max(output.data, 1)
+                # Total number of labels
+                total += target.size(0)
+                # Total correct predictions
+                correct += (predicted == target.squeeze()).sum().item()
+
+    # calculate average training loss and accuracy over an epoch
+        val_loss = val_loss/len(self.testloader.dataset)
+        accuracy = 100 * correct/float(total)
+        return accuracy, val_loss
