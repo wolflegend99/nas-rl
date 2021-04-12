@@ -91,7 +91,7 @@ class Model(nn.Module):
                 # clear the gradients of all optimized variables
                 self.optimizer.zero_grad()
                 # forward pass: compute predicted outputs by passing inputs to the model
-                output = self.forward(data.float()).to(device)
+                output = self.forward(data.float())
                 #target = target.type(T.FloatTensor)
                 loss = self.criterion(output, target.long().squeeze())
                 train_loss += loss.item()*data.size(0)

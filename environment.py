@@ -10,6 +10,9 @@ import constants as C
 import helper as H
 from variableModel import Model
 
+use_cuda = T.cuda.is_available()
+device = T.device("cuda:0" if use_cuda else "cpu")
+
 class Environment():
   def __init__(self, num_agents, path='churn_modelling.csv'):
     self.path = path
@@ -31,6 +34,8 @@ class Environment():
     #self.agent_states = nodes
     #print("here")
     self.model = [Model(0.01, self.input_dims, self.output_dims, self.agent_states, self.activations, self.train_loader, self.test_loader) for i in range(self.num_agents)]
+    for i in range(self.num_agents):
+      self.model[i] = self.model[i].to(device)
     self.reset()
     #self.model1 = TestModel(self.input_dims, self.output_dims, 0.005, 3, 3, self.train_loader, self.test_loader)
     #self.model2 = TestModel(self.input_dims, self.output_dims, 0.005, 3, 3, self.train_loader, self.test_loader)
@@ -42,9 +47,11 @@ class Environment():
     #self.agent_states.clear()
     self.agent_states = [np.random.randint(C.MIN_NODES, C.MAX_NODES)]*self.num_agents
     #print(self.agent_states)
-    
+
     for i in range(self.num_agents):
       self.model[i].initialise(self.agent_states)
+      self.model[i] = self.model[i].to(device)
+
     #self.model1.initialise(layers, neurons)
     #self.model2.initialise(layers, neurons)
     
@@ -60,7 +67,8 @@ class Environment():
       neurons.append(self.model[i].hidden_layer_array[i])
     
     for i in range(self.num_agents):
-      self.model[i].initialise(hidden_layer_array)
+      self.model[i].initialise(neurons)
+      self.model[i] = self.model[i].to(device)
 
     #model1_action = model2_neurons - model1_neurons
     #if(model1_action >= 0):
@@ -83,6 +91,7 @@ class Environment():
         next_state = self.model[agent_no].add_neurons(int(action),agent_no)
     else:
         next_state = self.model[agent_no].remove_neurons(-int(action),agent_no)
+    self.model[agent_no] = self.model[agent_no].to(device)
     train_acc, train_loss = self.model[agent_no].train()
     test_acc, test_loss = self.model[agent_no].test()
     reward = H.reward(train_acc, train_loss,
