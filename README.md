@@ -3,8 +3,7 @@
 ### Despcription
 Neural Architecture Search poses a problem for Deep Learning. We use a Reinforcement Learning method to solve this issue, with multiple worker agents. The approach uses multiple DDPG agents, which are run by a controller and treats the environment of the dataset as a input to work on. 
 
-- Model 1: variable number of nodes, fixed number of hidden layers
-- Model 2: variable layers, variable number of nodes but same in each hidden layer
+- Model: variable number of nodes, fixed number of hidden layers
 
 ```
 Framework: PyTorch
