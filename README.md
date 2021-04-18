@@ -20,5 +20,4 @@ The controller can be trained on GPUs as well.
 ### Installation
 ```
 git clone https://github.com/wolflegend99/nas-rl.git
-
 ```
