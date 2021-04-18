@@ -6,8 +6,7 @@ import torch.nn.functional as F
 from helper import OrnsteinUhlenbeckActionNoise
 import constants as C
 
-use_cuda = torch.cuda.is_available()
-device = torch.device("cuda:0" if use_cuda else "cpu")
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class DDPGAgent():
     def __init__(self, alpha, beta, tau, input_dims, n_actions, hd1_dims = 400, hd2_dims = 300, mem_size = 1000000, gamma = 0.99, batch_size = 64, agent_no=1):
@@ -34,7 +33,6 @@ class DDPGAgent():
         noisy_action = action + torch.tensor(self.actionNoise(), dtype = torch.float32).to(device)
 
         self.localActor.train()
-        #final_action = C.MAX_ACTION[agent_no]*noisy_action.detach().numpy()[0]
         noisy_action = noisy_action.to('cpu')
         final_action = noisy_action.detach().numpy()[0]
 
@@ -45,9 +43,10 @@ class DDPGAgent():
     
     def learn(self, states, actions, rewards, next_states):
 
+
         #if self.replayBuffer.mem_cntr < self.batch_size:
         #    return
-
+        # raise notImplementedError here
         #states, actions, rewards, next_states = self.replayBuffer.sample_buffer(self.batch_size)
 
         states = torch.tensor(states, dtype = torch.float).to(device)
@@ -64,7 +63,6 @@ class DDPGAgent():
         #Q_prime = Q_prime.view(-1)
         y_prime = rewards + self.gamma*Q_prime
         #y_prime = y_prime.view(self.batch_size, 1)
-
 
         self.localCritic.optimizer.zero_grad()
         criticLoss = F.mse_loss(y_prime, Q)

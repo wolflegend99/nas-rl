@@ -21,8 +21,6 @@ class TestModel(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.trainloader = trainloader
         self.testloader = testloader
-        # self.criterion = nn.BCELoss()
-        
 
     def initialise(self, layers, neurons):
         nodes = [neurons]*layers
@@ -35,9 +33,7 @@ class TestModel(nn.Module):
         self.reset_optimizer()
     
     def reset_optimizer(self):
-        pass
-        #self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
-        
+        pass        
 
     def forward(self, x):
         for layer in self.fcs:
@@ -54,8 +50,7 @@ class TestModel(nn.Module):
 
         for index in range(len(self.fcs)):
 
-            # make the new weights in and out of hidden layer you are adding
-            # neurons to
+            # make the new weights in and out of hidden layer you are adding neurons to
             hl_input = T.zeros((num, self.fcs[index].weight.shape[1]))
             nn.init.xavier_uniform_(hl_input,
                                     gain=nn.init.calculate_gain('relu'))
@@ -136,14 +131,10 @@ class TestModel(nn.Module):
 
     def remove_layers(self, num):
         x = len(self.fcs)-1
+
         for index in range(x, max(0,x-num), -1):
             self.fcs.__delitem__(index)
-        '''
-         if x > num:
-            self.num_layers -= num
-        else:
-            self.num_layers = 1
-        '''
+
         self.num_layers = len(self.fcs)
         self.reset_optimizer()
         return [self.num_layers, self.num_nodes]
@@ -161,24 +152,30 @@ class TestModel(nn.Module):
             train_loss = 0
             loader = iter(self.trainloader)
             for data, target in loader:   # print("Target = ",target[0].item())
+                
                 # clear the gradients of all optimized variables
                 self.optimizer.zero_grad()
+                
                 # forward pass: compute predicted outputs by passing inputs to the model
                 output = self.forward(data.float())
+                
                 #target = target.type(T.FloatTensor)
                 loss = self.criterion(output, target.long().squeeze())
                 train_loss += loss.item()*data.size(0)
+                
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
+                
                 # perform a single optimization step (parameter update)
                 self.optimizer.step()
-                # update running training loss
                 
+                # update running training loss
                 total += target.size(0)
 
                 # accuracy
                 _, predicted = T.max(output.data, 1)
                 correct += (predicted == target.squeeze()).sum().item()
+
             acc_list.append(100*correct/total)
             loss_list.append(train_loss/total)
             #print("Epoch {} / {}: Accuracy is {}, loss is {}".format(epochs,C.EPOCHS,100*correct/total,train_loss/total))

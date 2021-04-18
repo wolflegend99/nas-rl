@@ -14,9 +14,11 @@ class Dataset():
         self.dataset = pd.read_csv(C.DIR_PATH + self.path)
 
     def preprocess(self):
+
         # this is a preprocessing module for "Churn modelling" dataset
         X = self.dataset.iloc[:, 3:-1].values
         y = self.dataset.iloc[:, -1].values
+
         # Encoding categorical data
         # Label Encoding the "Gender" column
         le = LabelEncoder()
@@ -26,16 +28,20 @@ class Dataset():
         ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [1])], remainder='passthrough')
         X = np.array(ct.fit_transform(X))
         y = np.array(y)
+        
         return X, y
 
     def split(self, X, y, fraction=C.TEST_SPLIT_FRACTION):
+
         # Splitting the dataset into the Training set and Test set
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = fraction, random_state = 0)
         return X_train, X_test, y_train, y_test
 
     def scale(self, X_train, X_test):
+
         #Feature Scaling
         sc = StandardScaler()
         X_train = sc.fit_transform(X_train)
         X_test = sc.transform(X_test)
+
         return X_train, X_test

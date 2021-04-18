@@ -10,8 +10,7 @@ import constants as C
 import helper as H
 from variableModel import Model
 
-use_cuda = T.cuda.is_available()
-device = T.device("cuda:0" if use_cuda else "cpu")
+device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
 class Environment():
   def __init__(self, num_agents, path='churn_modelling.csv'):
@@ -29,33 +28,40 @@ class Environment():
     print("Input dims is {}, output dims is {}".format(self.input_dims, self.output_dims))
     self.num_agents = num_agents
     self.func = 'relu'
-    self.agent_states = [np.random.randint(C.MIN_NODES, C.MAX_NODES)]*self.num_agents
+    self.agent_states = [[] for i in range(self.num_agents)]
     self.activations = [self.func]*self.num_agents
     #self.agent_states = nodes
-    #print("here")
-    self.model = [Model(0.01, self.input_dims, self.output_dims, self.agent_states, self.activations, self.train_loader, self.test_loader) for i in range(self.num_agents)]
+    print("env initialised here ...")
+    self.model = [Model(0.01, self.input_dims, self.output_dims, self.agent_states[i], self.activations, self.train_loader, self.test_loader) for i in range(self.num_agents)]
     for i in range(self.num_agents):
       self.model[i] = self.model[i].to(device)
-    self.reset()
-    #self.model1 = TestModel(self.input_dims, self.output_dims, 0.005, 3, 3, self.train_loader, self.test_loader)
-    #self.model2 = TestModel(self.input_dims, self.output_dims, 0.005, 3, 3, self.train_loader, self.test_loader)
 
   def reset(self):
-    #layers = np.random.randint(C.MIN_HIDDEN_LAYERS, C.MAX_HIDDEN_LAYERS)
-    #neurons = np.random.randint(C.MIN_NODES, C.MAX_NODES)
-    
-    #self.agent_states.clear()
+
     self.agent_states = [np.random.randint(C.MIN_NODES, C.MAX_NODES)]*self.num_agents
-    #print(self.agent_states)
 
     for i in range(self.num_agents):
       self.model[i].initialise(self.agent_states)
       self.model[i] = self.model[i].to(device)
 
-    #self.model1.initialise(layers, neurons)
-    #self.model2.initialise(layers, neurons)
-    
     return self.agent_states
+
+  def reset1(self, agent_no):
+
+    neurons = np.random.randint(C.MIN_NODES, C.MAX_NODES)
+
+    self.model[agent_no].initialise(self.agent_states)
+    self.model[agent_no] = self.model[agent_no].to(device)
+    
+
+  def sample_reset(self, agent_no, state_passed):
+
+    self.agent_states[agent_no] = state_passed
+
+    self.model[agent_no].initialise(self.agent_states[agent_no])
+    self.model[agent_no] = self.model[agent_no].to(device)
+    
+    return state_passed
 
   def step(self, action, agent_no):
     state_, reward = self.change_neurons(action, agent_no)
@@ -69,21 +75,17 @@ class Environment():
     for i in range(self.num_agents):
       self.model[i].initialise(neurons)
       self.model[i] = self.model[i].to(device)
-
-    #model1_action = model2_neurons - model1_neurons
-    #if(model1_action >= 0):
-    #    self.model1.add_neurons(int(model1_action))
-    #else:
-    #    self.model1.remove_neurons(-int(model1_action))
-    
-    #model2_action = model1_layers - model2_layers
-    #if(model2_action >= 0):
-    #    self.model2.add_layers(int(model2_action))
-    #else:
-    #    self.model2.remove_layers(-int(model2_action))
     
     return neurons
   
+  def synch1(self, synched_state, agent_no):
+
+    self.model[agent_no].initialise(synched_state)
+    self.model[agent_no] = self.model[agent_no].to(device)
+    self.agent_states[agent_no] = synched_state
+
+    return synched_state
+
   def change_neurons(self, action, agent_no):
     
     current_nodes = self.model[agent_no].hidden_layer_array[agent_no]

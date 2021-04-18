@@ -22,9 +22,7 @@ class TestModel(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.trainloader = trainloader
         self.testloader = testloader
-        # self.criterion = nn.BCELoss()
         
-
     def initialise(self, layers, neurons):
         nodes = [neurons]*layers
         hidden_layers = zip(nodes[:-1], nodes[1:])
@@ -33,16 +31,10 @@ class TestModel(nn.Module):
         self.output = nn.Linear(neurons, self.output_dims)
         self.num_layers = layers
         self.num_nodes = neurons
-        
-        
-        
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
-        #self.reset_optimizer()
     
     def reset_optimizer(self):
-        pass
-        #self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
-        
+        pass        
 
     def forward(self, x):
         for layer in self.fcs:
@@ -90,28 +82,32 @@ class TestModel(nn.Module):
             for data, target in loader:   # print("Target = ",target[0].item())
                 # clear the gradients of all optimized variables
                 self.optimizer.zero_grad()
+                
                 # forward pass: compute predicted outputs by passing inputs to the model
                 output = self.forward(data.float())
+                
                 #target = target.type(T.FloatTensor)
                 loss = self.criterion(output, target.long().squeeze())
                 train_loss += loss.item()*data.size(0)
+                
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
+                
                 # perform a single optimization step (parameter update)
                 self.optimizer.step()
-                # update running training loss
                 
+                # update running training loss
                 total += target.size(0)
 
                 # accuracy
                 _, predicted = T.max(output.data, 1)
                 correct += (predicted == target.squeeze()).sum().item()
+            
             acc_list.append(100*correct/total)
             loss_list.append(train_loss/total)
             #print("Epoch {} / {}: Accuracy is {}, loss is {}".format(epochs,C.EPOCHS,100*correct/total,train_loss/total))
         return acc_list[-1], loss_list[-1]
         #return mean(acc_list[-4:]), mean(loss_list[-4:])
-    
     
     def test(self):
         correct = 0

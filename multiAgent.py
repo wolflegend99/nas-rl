@@ -17,8 +17,7 @@ class MADDPG:
         self.agents = [DDPGAgent(alpha = self.alpha, beta = self.beta, tau = self.tau, 
                                  input_dims = input_dims, n_actions = n_actions, hd1_dims = hd1_dims,
                                  hd2_dims = hd2_dims, mem_size = mem_size, gamma = self.gamma,
-                                 batch_size = self.batch_size, agent_no = i) for i in range((self.num_agents))]
-        #print("here")
+                                 batch_size = self.batch_size, agent_no = i) for i in range(self.num_agents)]
         self.agents_states = []
         self.local_agent_states = [[] for i in range(self.num_agents)]
     
@@ -29,10 +28,6 @@ class MADDPG:
         for i in range(max_episode):
             print("Episode : {}".format(i))
             returns = [0 for i in range(self.num_agents)]
-            #state = self.env.reset()
-            #self.agent_states = [state for i in range(self.num_agents)]
-            #print("here")
-            #self.agent_states.clear()
             self.agent_states = self.env.reset() 
             self.local_agent_states = [self.agent_states for i in range(self.num_agents)]
             steps = 0
@@ -71,5 +66,16 @@ class MADDPG:
                 means[i] = np.mean(return_list[i][-20:])
             for i in range(self.num_agents):
                 print("Score model {} : {}".format(i, means[i]))
-            # print("Score Model1 : ",means[0])
-            # print("Score model2 : ",means[1])
+
+    def run_parallel(self, max_episode, max_steps):
+        
+        arr = Array('i', [3,3])
+        m = Manager()
+        printlock = m.Lock()
+        synchlock = m.Lock()
+        for i in range(self.num_agents):
+            p = Process(target = self.run, args = (max_episode, max_steps, i,
+                                                printlock, synchlock, arr, self.env,
+                                                self.agents))
+            p.start()
+            p.join()

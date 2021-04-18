@@ -9,21 +9,20 @@ import constants as C
 class CriticNetwork(nn.Module):
     def __init__(self, lr, input_dims, n_actions):
         super(CriticNetwork, self).__init__()
-
         self.lr = lr
         self.input_shape = input_dims
         self.n_actions = n_actions
+
         self.fc1 = nn.Linear(*input_dims,40)
         self.batch1 = nn.LayerNorm(40)
         self.fc2 = nn.Linear(40,30)
         self.batch2 = nn.LayerNorm(30)
         self.fc3 = nn.Linear(30, 1)
-    
+
         self.action_value = nn.Linear(n_actions, 30)
-
         self.optimizer = optim.Adam(self.parameters(), lr = self.lr, weight_decay=0.01)
-
         #self.initialize_weights_bias()
+    
     def initialize_weights_bias(self):
     
         f1 = 1/np.sqrt(self.fc1.weight.data.size()[0])
@@ -53,7 +52,6 @@ class CriticNetwork(nn.Module):
 
         return state_action_value
     
-
 class ActorNetwork(nn.Module):
     def __init__(self, lr, input_dims, hd1_dims, hd2_dims,action_dim, agent_no):
         super(ActorNetwork, self).__init__()
@@ -64,6 +62,7 @@ class ActorNetwork(nn.Module):
         self.hd2_dims = hd2_dims
         self.action_dim = action_dim
         self.agent_no = agent_no
+
         self.fc1 = nn.Linear(*self.input_dims, self.hd1_dims)
         self.fc2 = nn.Linear(self.hd1_dims, self.hd2_dims)
         self.fc3 = nn.Linear(self.hd2_dims, self.action_dim)
@@ -74,6 +73,7 @@ class ActorNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr = self.lr)
 
         #self.initialize_weights_bias()
+    
     def initialize_weights_bias(self):
 
         f1 = 1/np.sqrt(self.fc1.weight.data.size()[0])
@@ -96,7 +96,6 @@ class ActorNetwork(nn.Module):
         x = self.fc2(x)
         x = self.nb2(x)
         x = F.relu(x)
-        #x = self.fc3(x)
         x = T.tanh(self.fc3(x))
         
         return C.MAX_ACTION[self.agent_no]*x 

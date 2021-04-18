@@ -30,4 +30,5 @@ class ReplayBuffer():
     rewards = self.reward_mem[sample_index]
     #terminals = self.terminal_mem[sample_index]
 
-    return states, actions, rewards, next_states#, terminals
+    return states, actions, rewards, next_states
+    #, terminals
