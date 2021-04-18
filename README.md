@@ -21,3 +21,10 @@ The controller can be trained on GPUs as well.
 ```
 git clone https://github.com/wolflegend99/nas-rl.git
 ```
+### Dependencies
+```
+torch
+numpy
+pandas
+sklearn
+```
