@@ -13,9 +13,10 @@ Environment: Churn Modelling Dataset
 Neural Network: Feed Forward
 Sampling: Replay Buffer
 Type of Learning: Actor-Critic Method
+```
 
 The controller can be trained on GPUs as well.
-```
+
 
 ### Dependencies
 ```
