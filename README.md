@@ -1,6 +1,6 @@
 # nas-rl
 
-### Despcription
+### Description
 Neural Architecture Search poses a problem for Deep Learning. We use a Reinforcement Learning method to solve this issue, with multiple worker agents. The approach uses multiple DDPG agents, which are run by a controller and treats the environment of the dataset as a input to work on. 
 
 - Model: variable number of nodes, fixed number of hidden layers
