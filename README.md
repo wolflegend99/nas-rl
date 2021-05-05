@@ -9,8 +9,8 @@ Neural Architecture Search poses a problem for Deep Learning. We use a Reinforce
 Framework: PyTorch
 Mode of Update: Asynchronous
 Algorithm: Multi-Agent DDPG
-Environment: Churn Modelling Dataset
-Neural Network: Feed Forward
+Environment: Datasets
+Neural Network: DNN
 Sampling: Replay Buffer
 Type of Learning: Actor-Critic Method
 ```
