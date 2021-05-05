@@ -10,7 +10,7 @@ Framework: PyTorch
 Mode of Update: Asynchronous
 Algorithm: Multi-Agent DDPG
 Environment: Datasets
-Neural Network: DNN
+Neural Network: DNNs
 Sampling: Replay Buffer
 Type of Learning: Actor-Critic Method
 ```
